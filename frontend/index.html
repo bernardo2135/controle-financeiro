@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Controle Financeiro | Faculdade</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .card { transition: transform 0.2s, box-shadow 0.2s; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1); }
+    .hidden { display: none !important; }
+    .tab-active { border-bottom: 3px solid #3b82f6; color: #3b82f6; font-weight: 600; }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+  <!-- ==================== TELA DE LOGIN ==================== -->
+  <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+          <i class="fas fa-wallet text-3xl text-blue-600"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-800">Controle Financeiro</h1>
+        <p class="text-slate-500 mt-1">Gerencie suas finanças com facilidade</p>
+      </div>
+
+      <div id="login-form">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+          <input id="login-email" type="email" value="demo@faculdade.com"
+                 class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                 placeholder="seu@email.com" />
+        </div>
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-slate-700 mb-1">Senha</label>
+          <input id="login-senha" type="password" value="demo123"
+                 class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                 placeholder="••••••••" />
+        </div>
+        <button onclick="fazerLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition">
+          Entrar
+        </button>
+        <p class="text-center text-sm text-slate-500 mt-4">
+          Não tem conta? <a href="#" onclick="mostrarRegistro()" class="text-blue-600 hover:underline">Cadastre-se</a>
+        </p>
+        <p class="text-center text-xs text-slate-400 mt-3">Demo: demo@faculdade.com / demo123</p>
+      </div>
+
+      <div id="register-form" class="hidden">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-slate-700 mb-1">Nome</label>
+          <input id="reg-nome" type="text"
+                 class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+          <input id="reg-email" type="email"
+                 class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        </div>
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-slate-700 mb-1">Senha</label>
+          <input id="reg-senha" type="password"
+                 class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+        </div>
+        <button onclick="fazerRegistro()" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded-lg transition">
+          Criar Conta
+        </button>
+        <p class="text-center text-sm text-slate-500 mt-4">
+          Já tem conta? <a href="#" onclick="mostrarLogin()" class="text-blue-600 hover:underline">Entrar</a>
+        </p>
+      </div>
+
+      <div id="auth-error" class="hidden mt-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg"></div>
+    </div>
+  </div>
+
+  <!-- ==================== APP PRINCIPAL ==================== -->
+  <div id="app-screen" class="hidden">
+    <!-- Navbar -->
+    <nav class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+            <i class="fas fa-wallet text-white"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-slate-800">Controle Financeiro</h1>
+            <p class="text-xs text-slate-500" id="user-name">Carregando...</p>
+          </div>
+        </div>
+        <button onclick="logout()" class="text-slate-500 hover:text-red-600 transition text-sm flex items-center gap-2">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+      </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto px-4 py-6">
+      <!-- Cards de Resumo -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-slate-500">Saldo Atual</p>
+              <p id="card-saldo" class="text-2xl font-bold text-slate-800 mt-1">R$ 0,00</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <i class="fas fa-balance-scale text-blue-600"></i>
+            </div>
+          </div>
+        </div>
+        <div class="card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-slate-500">Receitas</p>
+              <p id="card-receitas" class="text-2xl font-bold text-green-600 mt-1">R$ 0,00</p>
+            </div>
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+              <i class="fas fa-arrow-up text-green-600"></i>
+            </div>
+          </div>
+        </div>
+        <div class="card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-slate-500">Despesas</p>
+              <p id="card-despesas" class="text-2xl font-bold text-red-600 mt-1">R$ 0,00</p>
+            </div>
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+              <i class="fas fa-arrow-down text-red-600"></i>
+            </div>
+          </div>
+        </div>
+        <div class="card bg-white rounded-xl p-5 shadow-sm border border-slate-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-slate-500">Transações</p>
+              <p id="card-qtd" class="text-2xl font-bold text-slate-800 mt-1">0</p>
+            </div>
+            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <i class="fas fa-exchange-alt text-purple-600"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="flex border-b border-slate-200">
+          <button onclick="mostrarTab('transacoes')" id="tab-transacoes" class="tab-active flex-1 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition">
+            <i class="fas fa-list mr-2"></i>Transações
+          </button>
+          <button onclick="mostrarTab('nova')" id="tab-nova" class="flex-1 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition">
+            <i class="fas fa-plus mr-2"></i>Nova Transação
+          </button>
+          <button onclick="mostrarTab('categorias')" id="tab-categorias" class="flex-1 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition">
+            <i class="fas fa-tags mr-2"></i>Categorias
+          </button>
+          <button onclick="mostrarTab('graficos')" id="tab-graficos" class="flex-1 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition">
+            <i class="fas fa-chart-pie mr-2"></i>Gráficos
+          </button>
+        </div>
+
+        <!-- TAB: Transações -->
+        <div id="panel-transacoes" class="p-5">
+          <div class="flex flex-wrap gap-3 mb-4">
+            <select id="filtro-tipo" onchange="carregarTransacoes()" class="px-3 py-2 border border-slate-300 rounded-lg text-sm">
+              <option value="">Todos os tipos</option>
+              <option value="receita">Receitas</option>
+              <option value="despesa">Despesas</option>
+            </select>
+            <button onclick="carregarTransacoes()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm transition">
+              <i class="fas fa-sync-alt mr-1"></i> Atualizar
+            </button>
+          </div>
+          <div id="lista-transacoes" class="space-y-2">
+            <p class="text-slate-400 text-center py-8">Carregando...</p>
+          </div>
+        </div>
+
+        <!-- TAB: Nova Transação -->
+        <div id="panel-nova" class="p-5 hidden">
+          <form onsubmit="salvarTransacao(event)" class="max-w-lg space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Descrição</label>
+              <input id="trans-desc" type="text" required
+                     class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                     placeholder="Ex: Compra no supermercado" />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Valor (R$)</label>
+                <input id="trans-valor" type="number" step="0.01" min="0.01" required
+                       class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Tipo</label>
+                <select id="trans-tipo" onchange="filtrarCategoriasPorTipo()" required
+                        class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                  <option value="despesa">Despesa</option>
+                  <option value="receita">Receita</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Categoria</label>
+              <select id="trans-categoria"
+                      class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="">Sem categoria</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Data</label>
+              <input id="trans-data" type="date"
+                     class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+            </div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition">
+              <i class="fas fa-save mr-2"></i>Salvar Transação
+            </button>
+          </form>
+          <div id="trans-msg" class="hidden mt-4 p-3 rounded-lg text-sm"></div>
+        </div>
+
+        <!-- TAB: Categorias -->
+        <div id="panel-categorias" class="p-5 hidden">
+          <form onsubmit="salvarCategoria(event)" class="flex flex-wrap gap-3 mb-6">
+            <input id="cat-nome" type="text" required placeholder="Nome da categoria"
+                   class="flex-1 min-w-[180px] px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+            <select id="cat-tipo" class="px-4 py-2 border border-slate-300 rounded-lg">
+              <option value="despesa">Despesa</option>
+              <option value="receita">Receita</option>
+            </select>
+            <button type="submit" class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition">
+              <i class="fas fa-plus mr-1"></i> Adicionar
+            </button>
+          </form>
+          <div id="lista-categorias" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            <p class="text-slate-400 col-span-full text-center py-6">Carregando...</p>
+          </div>
+        </div>
+
+        <!-- TAB: Gráficos -->
+        <div id="panel-graficos" class="p-5 hidden">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="font-semibold text-slate-700 mb-3">Despesas por Categoria</h3>
+              <canvas id="chart-despesas" height="250"></canvas>
+            </div>
+            <div>
+              <h3 class="font-semibold text-slate-700 mb-3">Receitas por Categoria</h3>
+              <canvas id="chart-receitas" height="250"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:8000';
+    let token = localStorage.getItem('token') || null;
+    let categoriasCache = [];
+    let chartDespesas = null;
+    let chartReceitas = null;
+
+    // ========== AUTH ==========
+    function mostrarRegistro() {
+      document.getElementById('login-form').classList.add('hidden');
+      document.getElementById('register-form').classList.remove('hidden');
+      document.getElementById('auth-error').classList.add('hidden');
+    }
+    function mostrarLogin() {
+      document.getElementById('register-form').classList.add('hidden');
+      document.getElementById('login-form').classList.remove('hidden');
+      document.getElementById('auth-error').classList.add('hidden');
+    }
+
+    async function fazerLogin() {
+      const email = document.getElementById('login-email').value;
+      const senha = document.getElementById('login-senha').value;
+      const errEl = document.getElementById('auth-error');
+      try {
+        const form = new URLSearchParams();
+        form.append('username', email);
+        form.append('password', senha);
+        const res = await fetch(`${API}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: form
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.detail || 'Erro ao entrar');
+        }
+        const data = await res.json();
+        token = data.access_token;
+        localStorage.setItem('token', token);
+        await iniciarApp();
+      } catch (e) {
+        errEl.textContent = e.message;
+        errEl.classList.remove('hidden');
+      }
+    }
+
+    async function fazerRegistro() {
+      const nome = document.getElementById('reg-nome').value;
+      const email = document.getElementById('reg-email').value;
+      const senha = document.getElementById('reg-senha').value;
+      const errEl = document.getElementById('auth-error');
+      try {
+        const res = await fetch(`${API}/api/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, email, senha })
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.detail || 'Erro ao cadastrar');
+        }
+        // Após registrar, faz login
+        document.getElementById('login-email').value = email;
+        document.getElementById('login-senha').value = senha;
+        mostrarLogin();
+        await fazerLogin();
+      } catch (e) {
+        errEl.textContent = e.message;
+        errEl.classList.remove('hidden');
+      }
+    }
+
+    function logout() {
+      token = null;
+      localStorage.removeItem('token');
+      document.getElementById('app-screen').classList.add('hidden');
+      document.getElementById('login-screen').classList.remove('hidden');
+    }
+
+    async function iniciarApp() {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app-screen').classList.remove('hidden');
+      // Data de hoje no input
+      document.getElementById('trans-data').value = new Date().toISOString().split('T')[0];
+      await Promise.all([carregarUsuario(), carregarResumo(), carregarCategorias(), carregarTransacoes()]);
+    }
+
+    // ========== HELPERS ==========
+    function authHeaders() {
+      return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+    }
+
+    function formatarMoeda(v) {
+      return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatarData(d) {
+      return new Date(d).toLocaleDateString('pt-BR');
+    }
+
+    // ========== DADOS ==========
+    async function carregarUsuario() {
+      const res = await fetch(`${API}/api/auth/me`, { headers: authHeaders() });
+      if (res.ok) {
+        const u = await res.json();
+        document.getElementById('user-name').textContent = u.nome;
+      } else {
+        logout();
+      }
+    }
+
+    async function carregarResumo() {
+      const res = await fetch(`${API}/api/resumo`, { headers: authHeaders() });
+      if (!res.ok) return;
+      const r = await res.json();
+      document.getElementById('card-saldo').textContent = formatarMoeda(r.saldo);
+      document.getElementById('card-saldo').className = `text-2xl font-bold mt-1 ${r.saldo >= 0 ? 'text-slate-800' : 'text-red-600'}`;
+      document.getElementById('card-receitas').textContent = formatarMoeda(r.total_receitas);
+      document.getElementById('card-despesas').textContent = formatarMoeda(r.total_despesas);
+      document.getElementById('card-qtd').textContent = r.quantidade_transacoes;
+      atualizarGraficos(r);
+    }
+
+    async function carregarCategorias() {
+      const res = await fetch(`${API}/api/categorias`, { headers: authHeaders() });
+      if (!res.ok) return;
+      categoriasCache = await res.json();
+      // Lista
+      const lista = document.getElementById('lista-categorias');
+      if (categoriasCache.length === 0) {
+        lista.innerHTML = '<p class="text-slate-400 col-span-full text-center py-6">Nenhuma categoria</p>';
+      } else {
+        lista.innerHTML = categoriasCache.map(c => `
+          <div class="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-3">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full ${c.tipo === 'receita' ? 'bg-green-500' : 'bg-red-500'}"></span>
+              <span class="font-medium text-slate-700">${c.nome}</span>
+              <span class="text-xs text-slate-400">(${c.tipo})</span>
+            </div>
+            <button onclick="deletarCategoria(${c.id})" class="text-slate-400 hover:text-red-500 transition">
+              <i class="fas fa-trash text-sm"></i>
+            </button>
+          </div>
+        `).join('');
+      }
+      filtrarCategoriasPorTipo();
+    }
+
+    function filtrarCategoriasPorTipo() {
+      const tipo = document.getElementById('trans-tipo').value;
+      const select = document.getElementById('trans-categoria');
+      const filtradas = categoriasCache.filter(c => c.tipo === tipo);
+      select.innerHTML = '<option value="">Sem categoria</option>' +
+        filtradas.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    }
+
+    async function carregarTransacoes() {
+      const tipo = document.getElementById('filtro-tipo').value;
+      let url = `${API}/api/transacoes`;
+      if (tipo) url += `?tipo=${tipo}`;
+      const res = await fetch(url, { headers: authHeaders() });
+      if (!res.ok) return;
+      const lista = await res.json();
+      const el = document.getElementById('lista-transacoes');
+      if (lista.length === 0) {
+        el.innerHTML = '<p class="text-slate-400 text-center py-8">Nenhuma transação encontrada</p>';
+        return;
+      }
+      el.innerHTML = lista.map(t => `
+        <div class="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-4 py-3 transition">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center ${t.tipo === 'receita' ? 'bg-green-100' : 'bg-red-100'}">
+              <i class="fas ${t.tipo === 'receita' ? 'fa-arrow-up text-green-600' : 'fa-arrow-down text-red-600'}"></i>
+            </div>
+            <div>
+              <p class="font-medium text-slate-800">${t.descricao}</p>
+              <p class="text-xs text-slate-500">${formatarData(t.data)} ${t.categoria_nome ? '• ' + t.categoria_nome : ''}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="font-semibold ${t.tipo === 'receita' ? 'text-green-600' : 'text-red-600'}">
+              ${t.tipo === 'receita' ? '+' : '-'} ${formatarMoeda(t.valor)}
+            </span>
+            <button onclick="deletarTransacao(${t.id})" class="text-slate-400 hover:text-red-500 transition">
+              <i class="fas fa-trash text-sm"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function salvarTransacao(e) {
+      e.preventDefault();
+      const body = {
+        descricao: document.getElementById('trans-desc').value,
+        valor: parseFloat(document.getElementById('trans-valor').value),
+        tipo: document.getElementById('trans-tipo').value,
+        categoria_id: document.getElementById('trans-categoria').value ? parseInt(document.getElementById('trans-categoria').value) : null,
+        data: document.getElementById('trans-data').value ? new Date(document.getElementById('trans-data').value).toISOString() : null
+      };
+      const msg = document.getElementById('trans-msg');
+      try {
+        const res = await fetch(`${API}/api/transacoes`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          const d = await res.json();
+          throw new Error(d.detail || 'Erro ao salvar');
+        }
+        msg.textContent = 'Transação salva com sucesso!';
+        msg.className = 'mt-4 p-3 rounded-lg text-sm bg-green-50 text-green-700';
+        msg.classList.remove('hidden');
+        document.getElementById('trans-desc').value = '';
+        document.getElementById('trans-valor').value = '';
+        await Promise.all([carregarResumo(), carregarTransacoes()]);
+        setTimeout(() => msg.classList.add('hidden'), 3000);
+      } catch (err) {
+        msg.textContent = err.message;
+        msg.className = 'mt-4 p-3 rounded-lg text-sm bg-red-50 text-red-700';
+        msg.classList.remove('hidden');
+      }
+    }
+
+    async function deletarTransacao(id) {
+      if (!confirm('Deseja excluir esta transação?')) return;
+      await fetch(`${API}/api/transacoes/${id}`, { method: 'DELETE', headers: authHeaders() });
+      await Promise.all([carregarResumo(), carregarTransacoes()]);
+    }
+
+    async function salvarCategoria(e) {
+      e.preventDefault();
+      const body = {
+        nome: document.getElementById('cat-nome').value,
+        tipo: document.getElementById('cat-tipo').value
+      };
+      const res = await fetch(`${API}/api/categorias`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(body)
+      });
+      if (res.ok) {
+        document.getElementById('cat-nome').value = '';
+        await carregarCategorias();
+      }
+    }
+
+    async function deletarCategoria(id) {
+      if (!confirm('Excluir esta categoria?')) return;
+      await fetch(`${API}/api/categorias/${id}`, { method: 'DELETE', headers: authHeaders() });
+      await carregarCategorias();
+    }
+
+    function atualizarGraficos(resumo) {
+      const cores = ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#ec4899','#14b8a6'];
+      // Despesas
+      if (chartDespesas) chartDespesas.destroy();
+      const ctxD = document.getElementById('chart-despesas').getContext('2d');
+      const desp = resumo.despesas_por_categoria || [];
+      chartDespesas = new Chart(ctxD, {
+        type: 'doughnut',
+        data: {
+          labels: desp.map(d => d.categoria),
+          datasets: [{ data: desp.map(d => d.valor), backgroundColor: cores }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+      // Receitas
+      if (chartReceitas) chartReceitas.destroy();
+      const ctxR = document.getElementById('chart-receitas').getContext('2d');
+      const rec = resumo.receitas_por_categoria || [];
+      chartReceitas = new Chart(ctxR, {
+        type: 'doughnut',
+        data: {
+          labels: rec.map(d => d.categoria),
+          datasets: [{ data: rec.map(d => d.valor), backgroundColor: cores.slice().reverse() }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+    }
+
+    // ========== TABS ==========
+    function mostrarTab(nome) {
+      ['transacoes', 'nova', 'categorias', 'graficos'].forEach(t => {
+        document.getElementById(`panel-${t}`).classList.add('hidden');
+        document.getElementById(`tab-${t}`).classList.remove('tab-active');
+      });
+      document.getElementById(`panel-${nome}`).classList.remove('hidden');
+      document.getElementById(`tab-${nome}`).classList.add('tab-active');
+      if (nome === 'graficos') carregarResumo();
+    }
+
+    // ========== INIT ==========
+    if (token) {
+      iniciarApp().catch(() => logout());
+    }
+  </script>
+</body>
+</html>
